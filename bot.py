@@ -6,14 +6,24 @@ import re
 import config
 
 bot = commands.Bot(command_prefix='&')
+bot.remove_command('help')
 
 emoji_regex = "^<:(?P<name>[A-zA-Z0-9]*):(?P<id>[0-9]*)>$"
 emoji_regex2 = "^:(?P<name>[A-zA-Z0-9]*):$"
 
 @bot.event
 async def on_ready():
-    #await self.change_presence(activity=discord.Game(name='{}help for Emoji Abuse'.format(prefix)))
+    await bot.change_presence(activity=discord.Game(name='{}emoji_help for Emoji Abuse'.format(bot.command_prefix)))
     pass
+
+@bot.command(name="help")
+async def handle_help(ctx):
+    # TODO
+    description = "`emoji twitch/ffz/bttv channelname emotename [customname]`\n `emoji url emotename`\n `emoji_delete emotename`\n `help`"
+    embed = discord.Embed(description=description, color=0x5bc0de)
+    embed.set_author(name="Emoji Discord Bot", url="https://github.com/john-best/discord-emoji")
+    await ctx.message.channel.send(embed=embed)
+
 
 # emoji [url/twitch/ffz] [username/url] [twitch/ffz emote if not url]
 # bot AND caller needs to have manage emojis permission
@@ -23,7 +33,7 @@ async def on_ready():
 async def handle_emoji(ctx):
     # two options:
     # emoji url actual_url emote_name
-    # emoji twitch/ffz/bttv username emote_name TODO: new emote name??
+    # emoji twitch/ffz/bttv username emote_name [optional: custom_emote_name]
 
     await ctx.message.channel.trigger_typing()
     if len(ctx.message.content.split()) - 1 < 3:
