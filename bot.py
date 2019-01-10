@@ -5,7 +5,7 @@ import json
 import re
 
 import config
-bot = commands.Bot(command_prefix=commands.when_mentioned_or('&'))
+bot = commands.Bot(command_prefix='&')
 
 @bot.event
 async def on_ready():
@@ -26,6 +26,7 @@ async def handle_emoji(ctx):
     if len(ctx.message.content.split()) - 1 < 3:
         await ctx.message.channel.send("Error: Expected at least 3 params, found {}.".format(len(ctx.message.content.split()) - 1))
         return
+
     params = ctx.message.content.split()[1:]
 
     # url actual_url emote_name
@@ -98,11 +99,47 @@ async def handle_emoji(ctx):
 
         return
 
+    # bttv
+    elif params[0] == 'bttv':
+        url = "https://api.betterttv.net/2/channels/{}".format(params[1])
+        name = params[2]
+        req = requests.get(url);
+
+        if json.loads(req.text)["status"] == "404":
+            await ctx.message.channel.send("Error: unable to find BetterTTV channel")
+            return
+        
+        emotes = json.loads(req.text)["emotes"]
+
+
+        # in situations where the user can type the emoji
+        # the emoji is replaced with <:name:id>
+        emoji_regex = "^<:(?P<name>[A-zA-Z0-9]*):(?P<id>[0-9]*)>$"
+        match = re.match(emoji_regex, name)
+        if match is not None:
+            name = match.group("name")
+
+        emote_id = None
+
+        for emote in emotes:
+            if emote["code"] == name:
+                emote_id = emote["id"]
+                break
+
+        if emote_id is None:
+            await ctx.message.channel.send("Error: unable to find BetterTTV emote with given channel name and emote name")
+        
+        emote_url = "https://cdn.betterttv.net/emote/{}/1x".format(emote_id)
+        image = requests.get(emote_url).content
+        await handle_create_emoji(ctx, image, name)
+
+
+        
     else:
         await ctx.message.channel.send("Error: Invalid params. Check {}help for more information.".format(ctx.prefix))
         return
 
-@bot.command(name="delete_emoji")
+@bot.command(name="emoji_delete")
 @commands.has_permissions(manage_emojis=True)
 @commands.bot_has_permissions(manage_emojis=True)
 async def handle_delete_emoji(ctx):
@@ -115,7 +152,12 @@ async def handle_delete_emoji(ctx):
 
     # if we want to delete an emoji it's most likely (100%??) going to pass through this converter
     emoji_regex = "^<:(?P<name>[A-zA-Z0-9]*):(?P<id>[0-9]*)>$"
+    emoji_regex2 = "^:(?P<name>[A-zA-Z0-9]*):$"
     match = re.match(emoji_regex, name)
+    if match is not None:
+        name = match.group("name")
+    
+    match = re.match(emoji_regex2, name)
     if match is not None:
         name = match.group("name")
 
@@ -124,7 +166,8 @@ async def handle_delete_emoji(ctx):
             await emoji.delete()
             await ctx.message.channel.send("`:{}:` deleted.".format(name))
             return
-
+    
+    await ctx.message.channel.send("Error: could not find `:{}:`.".format(name))
 # basic error handling to send to channel for easier debugging
 @handle_emoji.error
 async def handle_emoji_error(ctx, error):
@@ -147,7 +190,7 @@ async def handle_create_emoji(ctx, image, name):
             break
 
     emoji = await guild.create_custom_emoji(name=name, image=image)
-    if overwrite == True:
+    if overwrite == True:   
         await ctx.message.channel.send("Emoji overwritten! Use `:{}:` to use {}.".format(emoji.name, str(emoji)))
     else:
         await ctx.message.channel.send("Emoji added! Use `:{}:` to use {}.".format(emoji.name, str(emoji)))
