@@ -13,7 +13,7 @@ emoji_regex2 = "^:(?P<name>[A-zA-Z0-9]*):$"
 
 @bot.event
 async def on_ready():
-    await bot.change_presence(activity=discord.Game(name='{}emoji_help for Emoji Abuse'.format(bot.command_prefix)))
+    await bot.change_presence(activity=discord.Game(name='{}help for Emoji Abuse'.format(bot.command_prefix)))
     pass
 
 @bot.command(name="help")
