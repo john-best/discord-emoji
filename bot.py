@@ -5,7 +5,11 @@ import json
 import re
 
 import config
+
 bot = commands.Bot(command_prefix='&')
+
+emoji_regex = "^<:(?P<name>[A-zA-Z0-9]*):(?P<id>[0-9]*)>$"
+emoji_regex2 = "^:(?P<name>[A-zA-Z0-9]*):$"
 
 @bot.event
 async def on_ready():
@@ -49,7 +53,7 @@ async def handle_emoji(ctx):
         
         # in situations where the user can type the emoji
         # the emoji is replaced with <:name:id>
-        emoji_regex = "^<:(?P<name>[A-zA-Z0-9]*):(?P<id>[0-9]*)>$"
+        
         match = re.match(emoji_regex, name)
         if match is not None:
             name = match.group("name")
@@ -74,7 +78,6 @@ async def handle_emoji(ctx):
 
         # in situations where the user can type the emoji
         # the emoji is replaced with <:name:id>
-        emoji_regex = "^<:(?P<name>[A-zA-Z0-9]*):(?P<id>[0-9]*)>$"
         match = re.match(emoji_regex, name)
         if match is not None:
             name = match.group("name")
@@ -121,7 +124,6 @@ async def handle_emoji(ctx):
 
         # in situations where the user can type the emoji
         # the emoji is replaced with <:name:id>
-        emoji_regex = "^<:(?P<name>[A-zA-Z0-9]*):(?P<id>[0-9]*)>$"
         match = re.match(emoji_regex, name)
         if match is not None:
             name = match.group("name")
@@ -143,7 +145,7 @@ async def handle_emoji(ctx):
         if len(params) == 4:
             name = params[3]
         await handle_create_emoji(ctx, image, name)
-        
+
     else:
         await ctx.message.channel.send("Error: Invalid params. Check {}help for more information.".format(ctx.prefix))
         return
@@ -159,9 +161,7 @@ async def handle_delete_emoji(ctx):
 
     name = ctx.message.content.split()[1]
 
-    # if we want to delete an emoji it's most likely (100%??) going to pass through this converter
-    emoji_regex = "^<:(?P<name>[A-zA-Z0-9]*):(?P<id>[0-9]*)>$"
-    emoji_regex2 = "^:(?P<name>[A-zA-Z0-9]*):$"
+    # if we want to delete an emoji it's most likely (100%??) going to pass through these conversions
     match = re.match(emoji_regex, name)
     if match is not None:
         name = match.group("name")
