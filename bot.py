@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 import requests
-import json
 import re
 
 import config
@@ -46,10 +45,9 @@ async def handle_emoji(ctx):
     elif params[0] == 'twitch':
         url = "https://api.twitch.tv/api/channels/{}/product".format(params[1])
         name = params[2]
-        req = requests.request('GET', url=url, headers={"Client-ID": config.twitch_client_id})
 
         # TODO: need to check response when channel doesn't exist
-        emoticons = json.loads(req.text)["emoticons"]
+        emoticons = requests.request('GET', url=url, headers={"Client-ID": config.twitch_client_id}).json()["emoticons"]
         
         # in situations where the user can type the emoji
         # the emoji is replaced with <:name:id>
@@ -85,8 +83,7 @@ async def handle_emoji(ctx):
 
         # search using channel name AND the search parameter
         url = "https://api.frankerfacez.com/v1/emoticons?q={}%20{}".format(params[1], name)
-        req = requests.get(url);
-        emoticons = json.loads(req.text)["emoticons"]
+        emoticons = requests.get(url).json()["emoticons"]
 
         if len(emoticons) == 0:
             await ctx.message.channel.send("Error: unable to find FFZ emote with given channel name and emote name")
@@ -113,13 +110,13 @@ async def handle_emoji(ctx):
     elif params[0] == 'bttv':
         url = "https://api.betterttv.net/2/channels/{}".format(params[1])
         name = params[2]
-        req = requests.get(url);
+        res = requests.get(url).json()
 
-        if json.loads(req.text)["status"] == "404":
+        if res["status"] == "404":
             await ctx.message.channel.send("Error: unable to find BetterTTV channel")
             return
         
-        emotes = json.loads(req.text)["emotes"]
+        emotes = res["emotes"]
 
 
         # in situations where the user can type the emoji
@@ -184,7 +181,7 @@ async def handle_emoji_error(ctx, error):
 
 @handle_delete_emoji.error
 async def handle_delete_emoji_error(ctx, error):
-    await ctx.message.channel.send(error);
+    await ctx.message.channel.send(error)
 
 # this just creates the emoji on the server
 # will overwrite the previous emoji if there was one under its name
