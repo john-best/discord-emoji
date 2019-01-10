@@ -56,8 +56,13 @@ async def handle_emoji(ctx):
         url = "https://api.twitch.tv/api/channels/{}/product".format(params[1])
         name = params[2]
 
-        # TODO: need to check response when channel doesn't exist
-        emoticons = requests.request('GET', url=url, headers={"Client-ID": config.twitch_client_id}).json()["emoticons"]
+        res = requests.request('GET', url=url, headers={"Client-ID": config.twitch_client_id}).json()
+        
+        if "status" in res and res["status"] == 404:
+            await ctx.message.channel.send("Error: twitch channel not found!")
+            return
+
+        emoticons = res["emoticons"]
         
         # in situations where the user can type the emoji
         # the emoji is replaced with <:name:id>
