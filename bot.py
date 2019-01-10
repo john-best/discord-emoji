@@ -20,7 +20,7 @@ async def on_ready():
 async def handle_emoji(ctx):
     # two options:
     # emoji url actual_url emote_name
-    # emoji twitch/ffz username emote_name TODO: new emote name??
+    # emoji twitch/ffz/bttv username emote_name TODO: new emote name??
 
     await ctx.message.channel.trigger_typing()
     if len(ctx.message.content.split()) - 1 < 3:
@@ -58,6 +58,10 @@ async def handle_emoji(ctx):
             if emoticon["regex"] == name:
                 url = emoticon["url"]
                 image = requests.get(url).content
+
+                # custom name
+                if len(params) == 4:
+                    name = params[3]
                 await handle_create_emoji(ctx, image, name)
                 return
               
@@ -91,6 +95,9 @@ async def handle_emoji(ctx):
         image_url = emoticon["urls"]["1"]
         image = requests.get("https:{}".format(image_url)).content
 
+        # custom name
+        if len(params) == 4:
+            name = params[3]
         await handle_create_emoji(ctx, image, name)
 
         # TODO: what happens when there are more than 1 result?
@@ -131,9 +138,11 @@ async def handle_emoji(ctx):
         
         emote_url = "https://cdn.betterttv.net/emote/{}/1x".format(emote_id)
         image = requests.get(emote_url).content
+
+        # custom name
+        if len(params) == 4:
+            name = params[3]
         await handle_create_emoji(ctx, image, name)
-
-
         
     else:
         await ctx.message.channel.send("Error: Invalid params. Check {}help for more information.".format(ctx.prefix))
