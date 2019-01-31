@@ -16,7 +16,7 @@ bot_url = "https://github.com/john-best/discord-emoji"
 @bot.event
 async def on_ready():
     # change the presence
-    await bot.change_presence(activity=discord.Game("{}help for Emoji Abuse".format(bot.command_prefix)))
+    await bot.change_presence(activity=discord.Game(f"{bot.command_prefix}help for Emoji Abuse"))
 
 """
 emoji - adds/overwrites an emoji to the server
@@ -178,7 +178,7 @@ async def handle_emoji(ctx, *args):
         if emote_id is None:
             await ctx.channel.send("Error: unable to find BetterTTV emote with given channel name and emote name")
         
-        emote_url = "https://cdn.betterttv.net/emote/{}/1x".format(emote_id)
+        emote_url = f"https://cdn.betterttv.net/emote/{emote_id}/1x"
         image = requests.get(emote_url).content
 
         # custom name (ignore rest of the args if there are any more)
@@ -189,7 +189,7 @@ async def handle_emoji(ctx, *args):
         return
 
     # if you didn't type in url/twitch/ffz/bttv then what platform are you looking for
-    await ctx.channel.send("Error: Invalid args. Check {}help for more information.".format(ctx.prefix))
+    await ctx.channel.send(f"Error: Invalid args. Check {ctx.prefix}help for more information.")
 
 """
 emoji_delete - deletes emoji from the server
@@ -218,10 +218,10 @@ async def handle_emoji_delete(ctx, name):
     for emoji in ctx.guild.emojis:
         if emoji.name == name:
             await emoji.delete()
-            await ctx.channel.send("`:{}:` deleted.".format(name))
+            await ctx.channel.send(f"`:{name}:` deleted.")
             return
     
-    await ctx.channel.send("Error: could not find `:{}:`.".format(name))
+    await ctx.channel.send(f"Error: could not find `:{name}:`.")
 
 """
 emoji_list - prints an embed of the emojis on the server
@@ -240,7 +240,7 @@ async def handle_emoji_list(ctx):
     embed.set_author(name="Emoji Discord Bot", url=bot_url, icon_url=bot.user.avatar_url)
 
     for emoji in ctx.guild.emojis:
-        embed.add_field(name=":{}:".format(emoji.name), value=str(emoji))
+        embed.add_field(name=f":{emoji.name}:", value=str(emoji))
 
     sent = await ctx.channel.send(embed=embed)
     await sent.add_reaction("❌")
@@ -308,9 +308,9 @@ async def handle_create_emoji(ctx, image, name):
 
     emoji = await ctx.guild.create_custom_emoji(name=name, image=image)
     if overwrite == True:   
-        await ctx.channel.send("Emoji overwritten! Use `:{}:` to use {}.".format(emoji.name, str(emoji)))
+        await ctx.channel.send(f"Emoji overwritten! Use `:{emoji.name}:` to use {str(emoji)}.")
     else:
-        await ctx.channel.send("Emoji added! Use `:{}:` to use {}.".format(emoji.name, str(emoji)))
+        await ctx.channel.send(f"Emoji added! Use `:{emoji.name}:` to use {str(emoji)}.")
     return
 
 # error sounds cooler than exception for users
