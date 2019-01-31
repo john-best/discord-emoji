@@ -6,7 +6,8 @@ import asyncio
 
 import config
 
-bot = commands.Bot(command_prefix=commands.when_mentioned_or("&"))
+prefix = "&"
+bot = commands.Bot(command_prefix=commands.when_mentioned_or(prefix))
 bot.remove_command("help")
 
 emoji_regex = "^<:(?P<name>[A-zA-Z0-9]*):(?P<id>[0-9]*)>$"
@@ -16,7 +17,7 @@ bot_url = "https://github.com/john-best/discord-emoji"
 @bot.event
 async def on_ready():
     # change the presence
-    await bot.change_presence(activity=discord.Game(f"{bot.command_prefix}help for Emoji Abuse"))
+    await bot.change_presence(activity=discord.Game(f"{prefix}help for Emoji Abuse"))
 
 """
 emoji - adds/overwrites an emoji to the server
