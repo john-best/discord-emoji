@@ -6,7 +6,7 @@ import asyncio
 
 import config
 
-bot = commands.Bot(command_prefix="&")
+bot = commands.Bot(command_prefix=commands.when_mentioned_or("&"))
 bot.remove_command("help")
 
 emoji_regex = "^<:(?P<name>[A-zA-Z0-9]*):(?P<id>[0-9]*)>$"
@@ -25,7 +25,8 @@ to use:
 1. emoji url actual_url
 2. emoji twitch twitch_channel twitch_emote_name [optional: custom_emote_name]
 3. emoji ffz ffz_user ffz_emote_name [optional: custom_emote_name]
-4. emoji bttv bttv_user bttv_emote_name [optional: custom_emote_name]
+4. emoij ffzid ffz_emote_id [optional: custom_emote_name]
+5. emoji bttv bttv_user bttv_emote_name [optional: custom_emote_name]
 
 note: both the bot and the user must have the manage_emojis permissions
 """
@@ -39,8 +40,8 @@ async def handle_emoji(ctx, *args):
     await ctx.channel.trigger_typing()
 
     # arg length check. maximum doesn't really matter since we just ignore it
-    if len(args) < 3:
-        await ctx.channel.send("Error: Expected at least 3 args, found {}.".format(len(args)))
+    if len(args) < 2:
+        await ctx.channel.send(f"Error: Expected at least 2 args, found {len(args)}.")
         return
 
     # url actual_url emote_name
@@ -54,7 +55,7 @@ async def handle_emoji(ctx, *args):
     
     # twitch username emote_name
     elif args[0] == "twitch":
-        url = "https://api.twitch.tv/api/channels/{}/product".format(args[1])
+        url = f"https://api.twitch.tv/api/channels/{args[1]}/product"
         name = args[2]
 
         res = requests.request("GET", url=url, headers={"Client-ID": config.twitch_client_id}).json()
@@ -99,7 +100,7 @@ async def handle_emoji(ctx, *args):
             name = match.group("name")
 
         # search using channel name AND the search parameter
-        url = "https://api.frankerfacez.com/v1/emoticons?q={}%20{}".format(args[1], name)
+        url = f"https://api.frankerfacez.com/v1/emoticons?q={args[1]}%20{name}"
         emoticons = requests.get(url).json()["emoticons"]
 
         # if the search query returns nothing, then we can't do anything
@@ -114,7 +115,7 @@ async def handle_emoji(ctx, *args):
 
         # when would we use the urls not located at the first location?
         image_url = emoticon["urls"]["1"]
-        image = requests.get("https:{}".format(image_url)).content
+        image = requests.get(f"https:{image_url}").content
 
         # custom name (ignore rest of the args if there are any more)
         if len(args) >= 4:
@@ -123,9 +124,33 @@ async def handle_emoji(ctx, *args):
         await handle_create_emoji(ctx, image, name)
         return
 
-    # bttv
+    # ffzid emote_id
+    elif args[0] == "ffzid":
+        emote_id = args[1]
+
+        # there is an api call for directly the id, which is faster than using search
+        url = f"https://api.frankerfacez.com/v1/emote/{emote_id}"
+        res = requests.get(url).json()
+
+        # error out if id doesn't exist
+        if "error" in res:
+            await ctx.channel.send("Error: unable to find FrankerFaceZ emote given the id!")
+            return
+        
+        emote = res["emote"]
+        image_url = emote["urls"]["1"]
+        image = requests.get(f"https:{image_url}").content
+
+        name = emote["name"]
+        if len(args) >= 3:
+            name = args[2]
+        
+        await handle_create_emoji(ctx, image, name)
+        return       
+
+    # bttv channel_name emote_name
     elif args[0] == "bttv":
-        url = "https://api.betterttv.net/2/channels/{}".format(args[1])
+        url = f"https://api.betterttv.net/2/channels/{args[1]}"
         name = args[2]
         res = requests.get(url).json()
 
@@ -221,7 +246,7 @@ async def handle_emoji_list(ctx):
     await sent.add_reaction("❌")
 
     try:
-        reaction, user= await bot.wait_for("reaction_add", timeout=10.0, check=check)
+        reaction, user = await bot.wait_for("reaction_add", timeout=10.0, check=check)
     except asyncio.TimeoutError:
         await sent.clear_reactions()
     else:
@@ -238,6 +263,7 @@ async def handle_help(ctx):
     Here are the commands that I know.
 
     `emoji twitch/ffz/bttv channelname emotename [optional: customname]`
+    `emoji ffzid emote_id [optional: customname]`
     `emoji url emotename`
     `emoji_delete emotename`
     `emoji_list`
