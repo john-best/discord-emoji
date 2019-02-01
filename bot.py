@@ -114,8 +114,14 @@ async def handle_emoji(ctx, *args):
         # appear. we'll assume only 1 emote exists
         emoticon = emoticons[0]
 
-        # when would we use the urls not located at the first location?
-        image_url = emoticon["urls"]["1"]
+        # go for highest quality image first
+        image_url = ""
+        if "4" in emoticon["urls"]:
+            image_url = emoticon["urls"]["4"]
+        elif "2" in emoticon["urls"]:
+            image_url = emoticon["urls"]["2"]
+        else:
+            image_url = emoticon["urls"]["1"]
         image = requests.get(f"https:{image_url}").content
 
         # custom name (ignore rest of the args if there are any more)
@@ -139,7 +145,13 @@ async def handle_emoji(ctx, *args):
             return
         
         emote = res["emote"]
-        image_url = emote["urls"]["1"]
+        image_url = ""
+        if "4" in emote["urls"]:
+            image_url = emote["urls"]["4"]
+        elif "2" in emote["urls"]:
+            image_url = emote["urls"]["2"]
+        else:
+            image_url = emote["urls"]["1"]
         image = requests.get(f"https:{image_url}").content
 
         name = emote["name"]
