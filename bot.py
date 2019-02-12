@@ -28,6 +28,7 @@ to use:
 3. emoji ffz ffz_user ffz_emote_name [optional: custom_emote_name]
 4. emoij ffzid ffz_emote_id [optional: custom_emote_name]
 5. emoji bttv bttv_user bttv_emote_name [optional: custom_emote_name]
+6. emoji twitchg twitch_emote_name [optional: custom_emote_name]
 
 note: both the bot and the user must have the manage_emojis permissions
 """
@@ -61,6 +62,7 @@ async def handle_emoji(ctx, *args):
 
         res = requests.request("GET", url=url, headers={"Client-ID": config.twitch_client_id}).json()
         
+        print(res)
         if "status" in res and res["status"] == 404:
             await ctx.channel.send("Error: twitch channel not found!")
             return
@@ -89,6 +91,35 @@ async def handle_emoji(ctx, *args):
         # emote not found
         await ctx.channel.send("Error: twitch emote not found!")
         return
+
+    elif args[0] == "twitchg":
+        
+        # prob cache this in the future
+        url = "https://twitchemotes.com/api_cache/v3/global.json"
+        emoticons = requests.get(url).json()
+
+        name = args[1]
+
+        # in situations where the user can type the emoji
+        # the emoji is replaced with <:name:id>, so we need to extract the name
+        match = re.match(emoji_regex, name)
+        if match is not None:
+            name = match.group("name")
+
+        if name not in emoticons:
+            await ctx.channel.send("Error: twitch global emote not found!")
+            return
+
+        url = f"https://static-cdn.jtvnw.net/emoticons/v1/{emoticons[name]['id']}/1.0"
+        image = requests.get(url).content
+
+        # custom name (ignore rest of the args if there are any more)
+        if len(args) >= 3:
+            name = args[2]
+                
+        await handle_create_emoji(ctx, image, name)
+        return 
+
 
     # ffz username emote_name
     elif args[0] == "ffz":
@@ -190,6 +221,7 @@ async def handle_emoji(ctx, *args):
         # the emote didn't exist so we didn't get an id
         if emote_id is None:
             await ctx.channel.send("Error: unable to find BetterTTV emote with given channel name and emote name")
+            return
         
         emote_url = f"https://cdn.betterttv.net/emote/{emote_id}/1x"
         image = requests.get(emote_url).content
@@ -201,7 +233,43 @@ async def handle_emoji(ctx, *args):
         await handle_create_emoji(ctx, image, name)
         return
 
-    # if you didn't type in url/twitch/ffz/bttv then what platform are you looking for
+    # bttvg emote_name
+    elif args[0] == "bttvg":
+        url = f"https://api.betterttv.net/2/emotes"
+        name = args[1]
+        res = requests.get(url).json()
+        emotes = res["emotes"]
+
+        # in situations where the user can type the emoji
+        # the emoji is replaced with <:name:id>
+        match = re.match(emoji_regex, name)
+        if match is not None:
+            name = match.group("name")
+
+        # grab the id string if the emote exists
+        emote_id = None
+
+        for emote in emotes:
+            if emote["code"] == name:
+                emote_id = emote["id"]
+                break
+
+        # the emote didn't exist so we didn't get an id
+        if emote_id is None:
+            await ctx.channel.send("Error: unable to find BetterTTV global emote!")
+            return
+        
+        emote_url = f"https://cdn.betterttv.net/emote/{emote_id}/3x"
+        image = requests.get(emote_url).content
+
+        # custom name (ignore rest of the args if there are any more)
+        if len(args) >= 3:
+            name = args[2]
+
+        await handle_create_emoji(ctx, image, name)
+        return
+
+    # if you didn't type in url/twitch(g)/ffz/bttv(g) then what platform are you looking for
     await ctx.channel.send(f"Error: Invalid args. Check {ctx.prefix}help for more information.")
 
 """
@@ -276,6 +344,7 @@ async def handle_help(ctx):
     Here are the commands that I know.
 
     `emoji twitch/ffz/bttv channelname emotename [optional: customname]`
+    `emoji twitchg emotename [optional: customname]`
     `emoji ffzid emote_id [optional: customname]`
     `emoji url emotename`
     `emoji_delete emotename`
