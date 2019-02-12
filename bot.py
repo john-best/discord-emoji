@@ -29,6 +29,7 @@ to use:
 4. emoij ffzid ffz_emote_id [optional: custom_emote_name]
 5. emoji bttv bttv_user bttv_emote_name [optional: custom_emote_name]
 6. emoji twitchg twitch_emote_name [optional: custom_emote_name]
+7. emoji bttvg bttv_emote_name [optional: custom_emote_name]
 
 note: both the bot and the user must have the manage_emojis permissions
 """
@@ -61,8 +62,7 @@ async def handle_emoji(ctx, *args):
         name = args[2]
 
         res = requests.request("GET", url=url, headers={"Client-ID": config.twitch_client_id}).json()
-        
-        print(res)
+
         if "status" in res and res["status"] == 404:
             await ctx.channel.send("Error: twitch channel not found!")
             return
@@ -223,7 +223,7 @@ async def handle_emoji(ctx, *args):
             await ctx.channel.send("Error: unable to find BetterTTV emote with given channel name and emote name")
             return
         
-        emote_url = f"https://cdn.betterttv.net/emote/{emote_id}/1x"
+        emote_url = f"https://cdn.betterttv.net/emote/{emote_id}/3x"
         image = requests.get(emote_url).content
 
         # custom name (ignore rest of the args if there are any more)
@@ -344,7 +344,7 @@ async def handle_help(ctx):
     Here are the commands that I know.
 
     `emoji twitch/ffz/bttv channelname emotename [optional: customname]`
-    `emoji twitchg emotename [optional: customname]`
+    `emoji twitchg/bttvg emotename [optional: customname]`
     `emoji ffzid emote_id [optional: customname]`
     `emoji url emotename`
     `emoji_delete emotename`
