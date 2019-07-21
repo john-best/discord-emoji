@@ -346,7 +346,7 @@ async def handle_emoji_help(ctx):
     `emoji_add twitch/ffz/bttv channelname emotename [optional: customname]`
     `emoji_add twitchg/bttvg emotename [optional: customname]`
     `emoji_add ffzid emote_id [optional: customname]`
-    `emoji_add url emotename`
+    `emoji_add url url emotename`
     `emoji_delete emotename`
     `emoji_list`
     `emoji_info emoji`
