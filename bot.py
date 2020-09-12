@@ -10,8 +10,8 @@ prefix = "!"
 bot = commands.Bot(command_prefix=commands.when_mentioned_or(prefix))
 bot.remove_command("help")
 
-emoji_regex = "^<:(?P<name>[A-zA-Z0-9]*):(?P<id>[0-9]*)>$"
-emoji_regex2 = "^:(?P<name>[A-zA-Z0-9]*):$"
+emoji_regex = "^<(?P<animated>a?):(?P<name>[A-zA-Z0-9]*):(?P<id>[0-9]*)>$"
+emoji_regex2 = "^(?P<animated>a?):(?P<name>[A-zA-Z0-9]*):$"
 bot_url = "https://github.com/john-best/discord-emoji"
 
 @bot.event
@@ -30,6 +30,7 @@ to use:
 5. emoji_add bttv bttv_user bttv_emote_name [optional: custom_emote_name]
 6. emoji_add twitchg twitch_emote_name [optional: custom_emote_name]
 7. emoji_add bttvg bttv_emote_name [optional: custom_emote_name]
+8. emoji_add discord emote [optional: emote_name]
 
 note: both the bot and the user must have the manage_emojis permissions
 """
@@ -269,6 +270,27 @@ async def handle_emoji(ctx, *args):
         await handle_create_emoji(ctx, image, name)
         return
 
+    # discord emote [emote_name]
+    elif args[0] == "discord":
+        
+        name = args[1]
+        emote_id = ""
+
+        match = re.match(emoji_regex, name)
+        if match is not None:
+            name = match.group("name")
+            emote_id = match.group("id")
+
+        # emote id is the same as the image in the cdn, we can ignore file extension here
+        emote_url = f"https://cdn.discordapp.com/emojis/{emote_id}?v=1"
+        image = requests.get(emote_url).content
+
+        if len(args) >= 3:
+            name = args[2]
+
+        await handle_create_emoji(ctx, image, name)
+        return
+
     # if you didn't type in url/twitch(g)/ffz/bttv(g) then what platform are you looking for
     await ctx.channel.send(f"Error: Invalid args. Check {ctx.prefix}help for more information.")
 
@@ -347,6 +369,7 @@ async def handle_emoji_help(ctx):
     `emoji_add twitchg/bttvg emotename [optional: customname]`
     `emoji_add ffzid emote_id [optional: customname]`
     `emoji_add url url emotename`
+    `emoji_add discord emote [optional: customname]`
     `emoji_delete emotename`
     `emoji_list`
     `emoji_info emoji`
@@ -389,7 +412,7 @@ async def handle_emoji_info(ctx, *args):
     emoji = bot.get_emoji(int(id))
 
     if emoji == None:
-        await ctx.channel.send(f"Error: emoji not found! Input must be an emoji within this server.")
+        await ctx.channel.send(f"Error: emoji not found! Input must be an emoji in a server I am in.")
         return
 
     embed = discord.Embed(title=f"Emoji info for {emoji.name}", color=0x5bc0de)
